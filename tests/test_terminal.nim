@@ -1,4 +1,4 @@
-import std/[unittest, nre, strutils, options]
+import std/[unittest, re, strutils, options]
 import ../src/sshterm/[terminal, base_connection, ssh_connection]
 
 suite "Terminal Emulation":

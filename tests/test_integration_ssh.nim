@@ -1,4 +1,4 @@
-import std/[unittest, os, strutils, nre]
+import std/[unittest, os, strutils, re, options]
 import ../src/sshterm/[ssh_connection, base_connection]
 
 # Integration test against local dockerized OpenSSH server.

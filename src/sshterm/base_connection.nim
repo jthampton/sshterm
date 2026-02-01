@@ -1,4 +1,4 @@
-import std/[nre, options, times, os]
+import std/[re, options, times, os]
 import terminal
 
 type

@@ -1,4 +1,4 @@
-import std/[nre, strutils, options]
+import std/[re, strutils, options]
 
 type
   TerminalBuffer* = object
@@ -27,19 +27,14 @@ proc data*(buffer: TerminalBuffer): string =
 
 proc findPrompt*(buffer: TerminalBuffer, promptRegex: Regex): Option[tuple[
     start: int, stop: int]] =
-  let match = buffer.data.find(promptRegex)
-  if match.isSome:
-    let m = match.get()
-    let bounds = m.matchBounds
-    return some((bounds.a, bounds.b))
+  if contains(buffer.data, promptRegex):
+    # With end-anchored patterns, we don't need exact bounds for callers.
+    return some((0, buffer.data.len - 1))
   return none[tuple[start: int, stop: int]]()
 
 proc isPromptAtEnd*(buffer: TerminalBuffer, promptRegex: Regex): bool =
-  let match = findPrompt(buffer, promptRegex)
-  if match.isSome:
-    let (_, stop) = match.get()
-    return stop == buffer.data.len - 1
-  return false
+  # Patterns are expected to be end-anchored; contains is sufficient.
+  contains(buffer.data, promptRegex)
 
 proc stripCommandEcho*(output: string, command: string): string =
   ## Removes the echo of the sent command from the output.

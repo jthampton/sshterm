@@ -1,4 +1,4 @@
-import std/[nre, options, net]
+import std/[re, options, net]
 import ssh2
 import libssh2
 import base_connection, terminal
