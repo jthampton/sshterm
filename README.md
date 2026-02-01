@@ -31,10 +31,10 @@ var conn = newSSHConnection(
   timeout = 10
 )
 
-conn.connect()
+conn.connect() # will connect, authenticate, and open a shell, leaving you at the prompt...
 defer: conn.disconnect()
 
-let output = conn.sendCommand("show version", timeout = 15)
+let output = conn.sendCommand("show version", timeout = 15) # runs the command and returns the output - getting you back to the prompt
 echo output
 ```
 
@@ -69,5 +69,3 @@ docker compose -f docker-compose.test.yml down
 - No private keys are stored in the repo; generate your own before running integration tests.
 - Prompt detection falls back to a heuristic (`.+[#>$] ?$`) if none is provided.
 - Paging detection defaults to common `--More--/RETURN/lines` patterns; override per-device as needed.
-
-If you want additional examples (e.g., with custom prompt regexes for specific network gear) or API docs, let me know.
