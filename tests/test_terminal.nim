@@ -1,5 +1,5 @@
-import std/[unittest, nre, strutils]
-import ../src/sshterm/terminal
+import std/[unittest, nre, strutils, options]
+import ../src/sshterm/[terminal, base_connection, ssh_connection]
 
 suite "Terminal Emulation":
   test "ANSI stripping":
@@ -38,3 +38,63 @@ suite "Terminal Emulation":
     let output = "show clock\r\n09:00:00 UTC Sat Jan 31 2026\r\nSwitch# "
     let stripped = stripCommandEcho(output, command)
     check stripped.startsWith("09:00:00")
+
+type
+  FakeConnection = ref object of BaseConnection
+    readQueue: seq[string]
+    readIndex: int
+    writes: seq[string]
+
+proc newFakeConnection(reads: seq[string], disablePagingCommand = ""): FakeConnection =
+  FakeConnection(
+    host: "h",
+    username: "u",
+    password: "p",
+    port: 22,
+    basePromptRegex: none[Regex](),
+    pagingRegex: re"(?i)--More--|RETURN|lines \d+-\d+",
+    buffer: newTerminalBuffer(),
+    lastCommand: "",
+    timeout: 1,
+    pagingAction: " ",
+    disablePagingCommand: disablePagingCommand,
+    readQueue: reads,
+    readIndex: 0,
+    writes: @[]
+  )
+
+method connect*(self: FakeConnection) = discard
+method disconnect*(self: FakeConnection) = discard
+method writeChannel*(self: FakeConnection, data: string) =
+  self.writes.add(data)
+method readChannel*(self: FakeConnection): string =
+  if self.readIndex < self.readQueue.len:
+    let res = self.readQueue[self.readIndex]
+    self.readIndex.inc
+    return res
+  return ""
+
+suite "Connection behavior":
+  test "detectPrompt stores heuristic when unset":
+    var conn = newFakeConnection(@["Switch# "])
+    conn.detectPrompt(1)
+    check conn.basePromptRegex.isSome
+
+  test "waitForPrompt sends paging action when paging detected":
+    var conn = newFakeConnection(@["--More--", "Switch# "])
+    let output = conn.waitForPrompt(some(re"Switch# $"), timeout = 1)
+    check output.contains("Switch# ")
+    check conn.writes.len == 1
+    check conn.writes[0] == " "
+
+  test "disablePaging issues command once":
+    var conn = newFakeConnection(@["Switch# "], disablePagingCommand = "term len 0")
+    conn.disablePaging()
+    check conn.writes.len == 1
+    check conn.writes[0].startsWith("term len 0")
+
+  test "ssh connection uses key auth when key present":
+    let connWithKey = newSSHConnection("h", "u", privateKeyPath = some("/id_rsa"))
+    check connWithKey.useKeyAuth()
+    let connNoKey = newSSHConnection("h", "u")
+    check connNoKey.useKeyAuth() == false

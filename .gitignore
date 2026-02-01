@@ -8,3 +8,6 @@ nimcache/
 
 nimble.develop
 nimble.paths
+
+id_rsa
+id_rsa.pub

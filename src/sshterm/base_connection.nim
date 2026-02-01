@@ -34,16 +34,16 @@ proc newBaseConnection*(host: string, username: string, password: string = "",
     disablePagingCommand: disablePagingCommand
   )
 
-method connect*(self: BaseConnection) =
+method connect*(self: BaseConnection) {.base.} =
   raise newException(CatchableError, "Not implemented")
 
-method disconnect*(self: BaseConnection) =
+method disconnect*(self: BaseConnection) {.base.} =
   raise newException(CatchableError, "Not implemented")
 
-method writeChannel*(self: BaseConnection, data: string) =
+method writeChannel*(self: BaseConnection, data: string) {.base.} =
   raise newException(CatchableError, "Not implemented")
 
-method readChannel*(self: BaseConnection): string =
+method readChannel*(self: BaseConnection): string {.base.} =
   raise newException(CatchableError, "Not implemented")
 
 proc promptHeuristic*(self: BaseConnection): Regex =
@@ -60,18 +60,12 @@ proc waitForPrompt*(self: BaseConnection, promptRegex: Option[Regex] = none[
       self.basePromptRegex.get()
     else:
       self.promptHeuristic()
-  let startTime = cpuTime()
+  let startTime = epochTime()
 
-  while cpuTime() - startTime < timeout.float:
+  while epochTime() - startTime < timeout.float:
     let output = self.readChannel()
     if output.len > 0:
       self.buffer.append(output)
-
-      # Check for paging
-      if self.buffer.findPrompt(self.pagingRegex).isSome:
-        self.writeChannel(self.pagingAction)
-        # Continue reading until we find the real prompt
-        continue
 
       if self.buffer.isPromptAtEnd(targetRegex):
         let res = self.buffer.data
@@ -79,6 +73,12 @@ proc waitForPrompt*(self: BaseConnection, promptRegex: Option[Regex] = none[
         if self.basePromptRegex.isNone:
           self.basePromptRegex = some(targetRegex)
         return res
+
+      # Check for paging after prompt check so a real prompt wins
+      if self.buffer.findPrompt(self.pagingRegex).isSome:
+        self.writeChannel(self.pagingAction)
+        # Continue reading until we find the real prompt
+        continue
 
     sleep(100)
 
@@ -105,6 +105,6 @@ proc sendCommandParse*(self: BaseConnection, command: string, parser: proc(
   let output = self.sendCommand(command, expectPrompt, timeout)
   return parser(output)
 
-method disablePaging*(self: BaseConnection) =
+method disablePaging*(self: BaseConnection) {.base.} =
   if self.disablePagingCommand != "":
     discard self.sendCommand(self.disablePagingCommand)
