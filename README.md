@@ -12,14 +12,12 @@ Interactive SSH terminal library for Nim. It opens an interactive shell over SSH
 ## Installation
 Add to your Nim project:
 ```
-nimble install ssh2
-# then add this repo to your path or vendor it
+nimble install sshterm
 ```
 
 ## Usage
 ```nim
 import sshterm/ssh_connection
-import std/nre
 
 var conn = newSSHConnection(
   host = "192.0.2.10",
