@@ -3,7 +3,8 @@
 Interactive SSH terminal library for Nim. It opens an interactive shell over SSH, auto-detects prompts, handles paging prompts, and provides convenience helpers to send commands and capture output with command echo stripped.
 
 ## Features
-- Interactive shell session over SSH
+- Interactive shell session over SSH (utilizing libssh2/ssh2 bindings from https://github.com/ba0f3/ssh2.nim)
+  - if you only need to run a 'one-shot' command without a need for an interactive session, you should use the `ssh2` library directly.
 - Prompt auto-detection with optional user-provided prompt regex
 - Paging handling (`--More--` style) with automatic advancement
 - Password and key-based authentication (via libssh2/ssh2 bindings)
