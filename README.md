@@ -9,6 +9,10 @@ Interactive SSH terminal library for Nim. It opens an interactive shell over SSH
 - Password and key-based authentication (via libssh2/ssh2 bindings)
 - Command helpers that strip echoed input
 
+### NOTE: 
+ - This is a work in progress and is not yet ready for production use.
+ - Always add a newline ('\n') character for each command sent to the shell.
+
 ## Installation
 Add to your Nim project:
 ```
@@ -34,7 +38,7 @@ var conn = newSSHConnection(
 conn.connect() # will connect, authenticate, and open a shell, leaving you at the prompt...
 defer: conn.disconnect()
 
-let output = conn.sendCommand("show version", timeout = 15) # runs the command and returns the output - getting you back to the prompt
+let output = conn.sendCommand("show version\n", timeout = 15) # runs the command and returns the output - getting you back to the prompt
 echo output
 ```
 
